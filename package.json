@@ -1,0 +1,38 @@
+{
+	"name": "@nette/eslint-plugin",
+	"version": "0.1.0",
+	"description": "Nette-specific ESLint rules and config",
+	"type": "module",
+	"license": "MIT",
+	"main": "src/index.js",
+	"files": [
+		"src"
+	],
+	"exports": {
+		".": "./src/index.js"
+	},
+	"keywords": [
+		"eslint",
+		"eslint-plugin",
+		"eslintplugin",
+		"eslintconfig",
+		"nette",
+		"javascript"
+	],
+	"peerDependencies": {
+		"@stylistic/eslint-plugin": ">=4.2.0",
+		"eslint": ">=9.26.0",
+		"globals": ">=16.1.0"
+	},
+	"devDependencies": {
+		"@stylistic/eslint-plugin": "^4.2.0",
+		"eslint": "^9.26.0",
+		"globals": "^16.1.0",
+		"mocha": "^11.2.2"
+	},
+	"scripts": {
+		"test": "mocha \"tests/**/*.js\"",
+		"lint": "eslint --cache",
+		"lint:fix": "eslint --cache --fix"
+	}
+}
