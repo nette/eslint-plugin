@@ -1,6 +1,6 @@
 {
 	"name": "@nette/eslint-plugin",
-	"version": "0.1.2",
+	"version": "0.2.1",
 	"description": "Nette-specific ESLint rules and config",
 	"type": "module",
 	"license": "MIT",

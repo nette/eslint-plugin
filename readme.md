@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@nette/eslint-plugin.svg)](https://www.npmjs.com/package/@nette/eslint-plugin)
 ![License](https://img.shields.io/npm/l/@nette/eslint-plugin.svg)
 
-An ESLint plugin with custom rules and shareable configuration for Nette-specific JavaScript and TypeScript linting.
+An ESLint plugin with custom rules and shareable configuration for Nette-specific JavaScript and TypeScript linting, including support for Latte template files.
 
 Installation
 ============
@@ -18,15 +18,27 @@ For TypeScript support, you will also need these additional dependencies:
 npm install --save-dev typescript typescript-eslint
 ```
 
+For Latte template support (HTML files with embedded JavaScript), you will also need:
+
+```bash
+npm install --save-dev eslint-plugin-html
+```
+
  <!---->
 
 Features
 ========
 
-This plugin provides two custom rules to improve code quality:
+This plugin provides custom rules and configurations to improve code quality:
 
+### Custom Rules
 - **no-this-in-arrow-except**: Prevents using `this` inside arrow functions with configurable exceptions
 - **prefer-line-comments**: Enforces line comments (`//`) over block comments (`/* */`) for single-line comments
+
+### Latte Template Support
+- **Latte Processor**: Processes Latte template files to lint JavaScript code within templates
+- **File Type Support**: `.js.latte`, `.css.latte`, `.txt.latte`, `.latte` files
+- **n:syntax="off"**: Respects syntax disable attribute in HTML elements
 
  <!---->
 
@@ -40,14 +52,46 @@ Add `@nette/eslint-plugin` to your ESLint configuration.
 ```js
 // eslint.config.js
 import nette from '@nette/eslint-plugin';
+import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
 	{
 		extends: [nette.configs.recommended],
 		// ...your other config items
 	},
-];
+]);
 ```
+
+Using Latte Configuration
+------------------------
+
+The [eslint-plugin-html](https://www.npmjs.com/package/eslint-plugin-html) plugin is used to check JavaScript inside `<script>` tags in HTML pages. This package provides you with a preprocessor that allows you to use Latte tags inside JavaScript, for example:
+
+```latte
+<script>
+let name = {$name};
+</script>
+```
+
+Use this configuration:
+
+```js
+import nette from '@nette/eslint-plugin';
+import pluginHtml from 'eslint-plugin-html';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+	{
+		files: ['app/**/*.latte'],
+
+		plugins: {
+			html: pluginHtml,       // Enables eslint-plugin-html
+		},
+		processor: '@nette/latte',  // Enabled Latte preprocessor
+	},
+]);
+```
+
 
 Using TypeScript Configuration
 ------------------------------
@@ -55,7 +99,6 @@ Using TypeScript Configuration
 Import from typescript entrypoint:
 
 ```js
-// eslint.config.js
 import nette from '@nette/eslint-plugin/typescript';
 
 export default defineConfig([
@@ -85,8 +128,8 @@ Using Rules
 -----------
 
 ```js
-// eslint.config.js
 import nette from '@nette/eslint-plugin';
+import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
 	{

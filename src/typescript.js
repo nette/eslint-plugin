@@ -33,6 +33,7 @@ function customize(options = {}) {
 let tsPlugin = {
 	meta: { ...plugin.meta },
 	rules: { ...plugin.rules },
+	processors: { ...plugin.processors },
 };
 
 tsPlugin.configs = {
