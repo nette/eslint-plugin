@@ -32,6 +32,17 @@ describe('JavaScript Configuration', () => {
 		assert(hasAllNetteRules, 'Not all Nette-specific rules found in JavaScript configuration');
 	});
 
+	it('should not include TypeScript rules by default', () => {
+		const hasTypeScriptRules = plugin.configs.recommended.some((config) => {
+			if (!config.rules) {
+				return false;
+			}
+			return Object.keys(config.rules).some((rule) => rule.includes('@typescript-eslint'));
+		});
+
+		assert(!hasTypeScriptRules, 'JavaScript configuration should not include TypeScript rules');
+	});
+
 	it('should include basic ESLint rules', () => {
 		const basicRules = [
 			'no-unused-vars',

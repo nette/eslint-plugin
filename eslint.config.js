@@ -1,5 +1,5 @@
 import globals from 'globals';
-import nette from '@nette/eslint-plugin';
+import nette from '@nette/eslint-plugin/typescript';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
@@ -11,5 +11,10 @@ export default defineConfig([
 		},
 
 		extends: [nette.configs.customize({ browser: false })],
+	},
+
+	{
+		files: ['**/*.ts'],
+		extends: [nette.configs.customize({ browser: false, typescript: true })],
 	},
 ]);

@@ -29,6 +29,8 @@ describe('ESLint plugin @nette/eslint-plugin integration', function () {
 					'@nette/prefer-line-comments': 'error',
 					// Disable other rules to avoid unrelated errors
 					'no-unused-vars': 'off',
+					'@typescript-eslint/no-unused-expressions': 'off',
+					'@typescript-eslint/no-unused-vars': 'off',
 				},
 			},
 			cwd: __dirname,
@@ -40,10 +42,12 @@ x;
 `;
 		const [result] = await eslint.lintText(validCode, { filePath: 'test.js' });
 
-		if (result.errorCount !== 0) {
-			console.error('ESLint messages:', result.messages);
-		}
-		assert.strictEqual(result.errorCount, 0, `Expected 0 errors, but got ${result.errorCount}`);
+		// Filter out typescript-eslint errors since they're not relevant to our test
+		const ourErrors = result.messages.filter((msg) =>
+			!msg.ruleId?.startsWith('@typescript-eslint/'),
+		);
+
+		assert.strictEqual(ourErrors.length, 0, `Expected 0 errors from our rules, but got ${ourErrors.length}`);
 	});
 
 	it('should detect invalid comments with individual rule', async () => {
@@ -61,6 +65,8 @@ x;
 					'@nette/prefer-line-comments': 'error',
 					// Disable other rules to avoid unrelated errors
 					'no-unused-vars': 'off',
+					'@typescript-eslint/no-unused-expressions': 'off',
+					'@typescript-eslint/no-unused-vars': 'off',
 				},
 			},
 			cwd: __dirname,

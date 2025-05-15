@@ -3,19 +3,19 @@
 [![npm version](https://img.shields.io/npm/v/@nette/eslint-plugin.svg)](https://www.npmjs.com/package/@nette/eslint-plugin)
 ![License](https://img.shields.io/npm/l/@nette/eslint-plugin.svg)
 
-An ESLint plugin with custom rules and shareable configuration for Nette-specific JavaScript linting.
+An ESLint plugin with custom rules and shareable configuration for Nette-specific JavaScript and TypeScript linting.
 
 Installation
 ============
 
 ```bash
-npm install --save-dev @nette/eslint-plugin
+npm install --save-dev @nette/eslint-plugin eslint
 ```
 
-This plugin has the following peer dependencies that need to be installed separately:
+For TypeScript support, you will also need these additional dependencies:
 
 ```bash
-npm install --save-dev eslint globals @stylistic/eslint-plugin @eslint/js
+npm install --save-dev typescript typescript-eslint
 ```
 
  <!---->
@@ -49,6 +49,23 @@ export default defineConfig([
 ];
 ```
 
+Using TypeScript Configuration
+------------------------------
+
+Import from typescript entrypoint:
+
+```js
+// eslint.config.js
+import nette from '@nette/eslint-plugin/typescript';
+
+export default defineConfig([
+	{
+		extends: [nette.configs.typescript],
+		// ...your other config items
+	},
+]);
+```
+
 Customizing Configuration
 ------------------------
 
@@ -57,6 +74,7 @@ export default defineConfig([
 	{
 		extends: [nette.configs.customize({
 			browser: true,    // Include browser globals (default: true)
+			typescript: true, // Include TypeScript support (default: false)
 		})],
 		// ...your other config items
 	},
