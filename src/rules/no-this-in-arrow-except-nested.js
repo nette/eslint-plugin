@@ -1,4 +1,4 @@
-export const meta = {
+const meta = {
 	type: 'problem',
 	docs: {
 		description: 'Disallow `this` inside an arrow function, with fine-grained exceptions',
@@ -24,7 +24,7 @@ export const meta = {
 	},
 };
 
-export function create(context) {
+function create(context) {
 	let [{ allowNestedInFunction = false } = {}] = context.options;
 	let sourceCode = context.sourceCode;
 

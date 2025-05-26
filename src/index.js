@@ -4,7 +4,7 @@
  * ESLint plugin with custom rules for Nette-specific linting
  */
 
-import plugin from './plugins.js';
+import plugin from './plugin.js';
 import jsConfig from './configs/javascript.js';
 import baseConfig from './configs/base.js';
 import browserConfig from './configs/browser.js';

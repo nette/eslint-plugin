@@ -1,5 +1,5 @@
 import stylistic from '@stylistic/eslint-plugin';
-import plugin from '../plugins.js';
+import plugin from '../plugin.js';
 
 export default [
 	{

@@ -1,4 +1,4 @@
-export const meta = {
+const meta = {
 	type: 'suggestion',
 	docs: {
 		description: 'Prefer // over /* */ for single-line comments (but allow one-line JSDoc /** … */).',
@@ -11,7 +11,7 @@ export const meta = {
 	},
 };
 
-export function create(context) {
+function create(context) {
 	let sourceCode = context.sourceCode;
 
 	return {
