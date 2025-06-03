@@ -87,7 +87,7 @@ describe('Latte Processor', () => {
 		});
 
 		it('should handle expressions and variables with content', () => {
-			const input = '{$user.name} {=expr + 1} {_"Hello world"} {Foo\Bar::Const}';
+			const input = '{$user.name} {=expr + 1} {_"Hello world"} {Foo\\Bar::Const}';
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
 			// Should be replaced with empty string since they start with $, =, _
