@@ -213,4 +213,101 @@ let obj = {if: true};
 			assert.strictEqual(result[0], expected);
 		});
 	});
+
+	describe('n:syntax="double" Detection', () => {
+		it('should process double-brace Latte tags in syntax="double" regions', () => {
+			const input = `<script n:syntax="double">
+function test() {
+	let name = {{$user.name}};
+	{{if $user}}
+	console.log('User exists');
+	{{/if}}
+}
+</script>`;
+			const result = latteProcessor.preprocess(input, 'test.latte');
+			const expected = `<script n:syntax="double">
+function test() {
+	let name = [];
+
+	console.log('User exists');
+
+}
+</script>`;
+			assert.strictEqual(result[0], expected);
+		});
+
+		it('should ignore single-brace tags in syntax="double" regions', () => {
+			const input = `<script n:syntax="double">
+function test() {
+	let obj = {if: 1, test: true};
+	let name = {{$user.name}};
+}
+</script>`;
+			const result = latteProcessor.preprocess(input, 'test.latte');
+			const expected = `<script n:syntax="double">
+function test() {
+	let obj = {if: 1, test: true};
+	let name = [];
+}
+</script>`;
+			assert.strictEqual(result[0], expected);
+		});
+
+		it('should handle different n:syntax="double" attribute variations', () => {
+			const input = `<script  n:syntax = double type="module">
+{{if $test}}
+console.log('{{$value}}');
+{{/if}}
+</script>`;
+			const result = latteProcessor.preprocess(input, 'test.latte');
+			const expected = `<script  n:syntax = double type="module">
+
+console.log('[]');
+
+</script>`;
+			assert.strictEqual(result[0], expected);
+		});
+
+		it('should handle mixed syntax regions', () => {
+			const input = `<script>
+{if $user}
+console.log({$user.name});
+{/if}
+</script>
+<script n:syntax="double">
+let obj = {if: true};
+let name = {{$user.name}};
+</script>
+<script n:syntax=off>
+let mixed = {if: true, name: {{invalid}}};
+</script>`;
+			const result = latteProcessor.preprocess(input, 'test.latte');
+			const expected = `<script>
+
+console.log([]);
+
+</script>
+<script n:syntax="double">
+let obj = {if: true};
+let name = [];
+</script>
+<script n:syntax=off>
+let mixed = {if: true, name: {{invalid}}};
+</script>`;
+			assert.strictEqual(result[0], expected);
+		});
+
+		it('should handle unquoted n:syntax=double attribute', () => {
+			const input = `<script n:syntax=double>
+let value = {{$data}};
+let obj = {normal: true};
+</script>`;
+			const result = latteProcessor.preprocess(input, 'test.latte');
+			const expected = `<script n:syntax=double>
+let value = [];
+let obj = {normal: true};
+</script>`;
+			assert.strictEqual(result[0], expected);
+		});
+	});
 });

@@ -5,8 +5,10 @@ let defaultSettings = {
 let settings = defaultSettings;
 let context;
 
-// Regex for Latte tags: {foo}, {/foo}, {=expr}, {_expr}, {$var} - supports multi-line
-const LATTE_TAG_MULTILINE = /\{(?:[a-zA-Z_$\\/=][^}]*)\}/gs;
+// Regex for Latte tags: {foo}, {/foo}, {=expr}, {_expr}, {$var}
+const LATTE_TAG = /\{(?:[a-zA-Z_$\\/=].*?)\}/gs;
+// Regex for double-brace Latte tags: {{foo}}, {{/foo}}, {{=expr}}, etc.
+const LATTE_TAG_DOUBLE = /\{\{(?:[a-zA-Z_$\\/=].*?)\}\}/gs;
 
 // Default internal replacement function
 function defaultReplacement(tagContent) {
@@ -109,11 +111,12 @@ function findSyntaxOffRegions(text) {
 	let regions = [];
 	let match;
 
-	// Check if element has n:syntax="off" attribute
-	let pattern = /<script\b([^>]*\bn:syntax\s*=\s*(?:(['"]?)off\2)[^>]*)>/gi;
+	// Check if element has n:syntax="off" or n:syntax="double" attribute
+	let pattern = /<script\b([^>]*\bn:syntax\s*=\s*(?:(['"]?)(off|double)\2)[^>]*)>/gi;
 
 	while ((match = pattern.exec(text)) !== null) {
 		let startPos = match.index;
+		let syntaxMode = match[3]; // 'off' or 'double'
 
 		// Find the closing tag
 		let closingTagRegex = new RegExp(`</script\\s*>`, 'gi');
@@ -124,6 +127,7 @@ function findSyntaxOffRegions(text) {
 			regions.push({
 				start: startPos,
 				end: closingTagRegex.lastIndex,
+				mode: syntaxMode,
 			});
 		}
 	}
@@ -131,10 +135,13 @@ function findSyntaxOffRegions(text) {
 	return regions;
 }
 
-function isInSyntaxOffRegion(position, syntaxOffRegions) {
-	return syntaxOffRegions.some((region) =>
-		position >= region.start && position < region.end,
-	);
+function getSyntaxModeForPosition(position, syntaxOffRegions) {
+	for (let region of syntaxOffRegions) {
+		if (position >= region.start && position < region.end) {
+			return region.mode;
+		}
+	}
+	return 'normal';
 }
 
 function remapMessages(messages) {
@@ -215,20 +222,54 @@ const latteProcessor = {
 		let filteredParts = [];
 		let filteredText = '';
 		let originalLineStartIndices;
-		let regex = LATTE_TAG_MULTILINE;
 
-		// Find regions with n:syntax="off"
+		// Find regions with n:syntax="off" or n:syntax="double"
 		let syntaxOffRegions = findSyntaxOffRegions(text);
 
-		// Reset regex
-		regex.lastIndex = 0;
+		// Process both single-brace and double-brace tags in a single pass
+		let matches = [];
+
+		// Collect all matches from both regexes
+		LATTE_TAG.lastIndex = 0;
+		let match;
+		while ((match = LATTE_TAG.exec(text)) !== null) {
+			matches.push({
+				match: match,
+				regex: LATTE_TAG,
+				type: 'single',
+			});
+		}
+
+		LATTE_TAG_DOUBLE.lastIndex = 0;
+		while ((match = LATTE_TAG_DOUBLE.exec(text)) !== null) {
+			matches.push({
+				match: match,
+				regex: LATTE_TAG_DOUBLE,
+				type: 'double',
+			});
+		}
+
+		// Sort matches by position
+		matches.sort((a, b) => a.match.index - b.match.index);
 
 		let lastIndex = 0;
-		let match;
 
-		while ((match = regex.exec(text)) !== null) {
+		for (let matchObj of matches) {
+			match = matchObj.match;
+			let syntaxMode = getSyntaxModeForPosition(match.index, syntaxOffRegions);
+
 			// Skip if this tag is in a syntax="off" region
-			if (isInSyntaxOffRegion(match.index, syntaxOffRegions)) {
+			if (syntaxMode === 'off') {
+				continue;
+			}
+
+			// Skip if this is a double-brace region but we're processing single-brace tag
+			if (syntaxMode === 'double' && matchObj.type === 'single') {
+				continue;
+			}
+
+			// Skip if this is a normal region but we're processing double-brace tag
+			if (syntaxMode === 'normal' && matchObj.type === 'double') {
 				continue;
 			}
 
@@ -238,21 +279,24 @@ const latteProcessor = {
 			}
 
 			// Determine replacement based on tag type
-			let tagContent = match[0].slice(1, -1); // Remove { and }
+			let tagContent = matchObj.type === 'double'
+				? match[0].slice(2, -2) // Remove {{ and }}
+				: match[0].slice(1, -1); // Remove { and }
 			let replacement = (settings.replacementFunction ? settings.replacementFunction(tagContent) : null)
 				?? defaultReplacement(tagContent);
 
 			// Handle leading whitespace removal for empty replacement on standalone tags
 			let actualReplacement = replacement;
 			let actualStartIndex = match.index;
+			let actualEndIndex = match.index + match[0].length;
 
 			if (replacement === '') {
 				// Check if the tag is on a line with only whitespace
 				let lineStart = text.lastIndexOf('\n', match.index) + 1;
-				let lineEnd = text.indexOf('\n', regex.lastIndex);
+				let lineEnd = text.indexOf('\n', actualEndIndex);
 				let actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
 				let beforeTag = text.substring(lineStart, match.index);
-				let afterTag = text.substring(regex.lastIndex, actualLineEnd);
+				let afterTag = text.substring(actualEndIndex, actualLineEnd);
 
 				// If line contains only whitespace + tag + whitespace, remove leading whitespace
 				if (beforeTag.trim() === '' && afterTag.trim() === '') {
@@ -263,8 +307,8 @@ const latteProcessor = {
 
 			let startLoc = getLocation(actualStartIndex, originalLineStartIndices);
 			startLoc.position = actualStartIndex;
-			let endLoc = getLocation(regex.lastIndex, originalLineStartIndices);
-			endLoc.position = regex.lastIndex;
+			let endLoc = getLocation(actualEndIndex, originalLineStartIndices);
+			endLoc.position = actualEndIndex;
 
 			filteredParts.push({
 				start: startLoc,
@@ -274,7 +318,7 @@ const latteProcessor = {
 
 			// Add text before the match + replacement
 			filteredText += text.substring(lastIndex, actualStartIndex) + actualReplacement;
-			lastIndex = regex.lastIndex;
+			lastIndex = actualEndIndex;
 		}
 
 		// Add remaining text
