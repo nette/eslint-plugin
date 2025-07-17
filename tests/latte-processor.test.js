@@ -43,7 +43,7 @@ describe('Latte Processor', () => {
 
 			// Control structures {if}, {/if}, {foreach} are replaced with empty string
 			// so spaces between them remain: '[] [] []   '
-			assert.strictEqual(result[0], '[] [] []   ');
+			assert.strictEqual(result[0], '[1] [2] [3]   ');
 		});
 
 		it('should handle special bracket tags', () => {
@@ -59,7 +59,7 @@ describe('Latte Processor', () => {
 
 			// Control structure {/} is replaced with empty string
 			// so space before it remains: '[] [] [] '
-			assert.strictEqual(result[0], '[] [] [] ');
+			assert.strictEqual(result[0], '[1] [2] [3] ');
 		});
 
 		it('should handle tags that start with special keywords', () => {
@@ -67,7 +67,7 @@ describe('Latte Processor', () => {
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
 			// All should be replaced with empty string since they start with keywords
-			assert.strictEqual(result[0], '[] [] [] []');
+			assert.strictEqual(result[0], '[1] [2] [3] [4]');
 		});
 
 		it('should handle keywords followed by word characters', () => {
@@ -83,7 +83,7 @@ describe('Latte Processor', () => {
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
 			// Function calls should be replaced with empty string
-			assert.strictEqual(result[0], '[] [] []');
+			assert.strictEqual(result[0], '[1] [2] [3]');
 		});
 
 		it('should handle expressions and variables with content', () => {
@@ -91,7 +91,7 @@ describe('Latte Processor', () => {
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
 			// Should be replaced with empty string since they start with $, =, _
-			assert.strictEqual(result[0], '[] [] [] []');
+			assert.strictEqual(result[0], '[1] [2] [3] [4]');
 		});
 
 		it('should handle multiline tags', () => {
@@ -99,7 +99,7 @@ describe('Latte Processor', () => {
 with newlines} after`;
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
-			assert.strictEqual(result[0], 'before [] after');
+			assert.strictEqual(result[0], 'before [1] after');
 		});
 
 		it('should handle complex mixed content', () => {
@@ -111,7 +111,7 @@ console.log(2);`;
 			const result = latteProcessor.preprocess(input, 'test.js.latte');
 			const expected = `console.log(1);
 
-document.getElementById('username').innerHTML = [];
+document.getElementById('username').innerHTML = [1];
 
 console.log(2);`;
 			assert.strictEqual(result[0], expected);
@@ -141,7 +141,7 @@ console.log(2);`;
 line5`;
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
-			assert.strictEqual(result[0], `line1\n\n\n\t[]\nline5`);
+			assert.strictEqual(result[0], `line1\n\n\n\t[1]\nline5`);
 		});
 	});
 
@@ -149,7 +149,7 @@ line5`;
 		it('should handle nested braces in Latte tags', () => {
 			const input = 'console.log({$array["key"]["nested"]});';
 			const result = latteProcessor.preprocess(input, 'test.js.latte');
-			const expected = 'console.log([]);';
+			const expected = 'console.log([1]);';
 			assert.strictEqual(result[0], expected);
 		});
 
@@ -204,7 +204,7 @@ let obj = {if: true};
 			const result = latteProcessor.preprocess(input, 'test.latte');
 			const expected = `<script>
 
-console.log([]);
+console.log([1]);
 
 </script>
 <script type="module" n:syntax=off>
@@ -227,7 +227,7 @@ function test() {
 			const result = latteProcessor.preprocess(input, 'test.latte');
 			const expected = `<script n:syntax="double">
 function test() {
-	let name = [];
+	let name = [1];
 
 	console.log('User exists');
 
@@ -247,7 +247,7 @@ function test() {
 			const expected = `<script n:syntax="double">
 function test() {
 	let obj = {if: 1, test: true};
-	let name = [];
+	let name = [1];
 }
 </script>`;
 			assert.strictEqual(result[0], expected);
@@ -262,7 +262,7 @@ console.log('{{$value}}');
 			const result = latteProcessor.preprocess(input, 'test.latte');
 			const expected = `<script  n:syntax = double type="module">
 
-console.log('[]');
+console.log('[1]');
 
 </script>`;
 			assert.strictEqual(result[0], expected);
@@ -284,12 +284,12 @@ let mixed = {if: true, name: {{invalid}}};
 			const result = latteProcessor.preprocess(input, 'test.latte');
 			const expected = `<script>
 
-console.log([]);
+console.log([1]);
 
 </script>
 <script n:syntax="double">
 let obj = {if: true};
-let name = [];
+let name = [2];
 </script>
 <script n:syntax=off>
 let mixed = {if: true, name: {{invalid}}};
@@ -304,7 +304,7 @@ let obj = {normal: true};
 </script>`;
 			const result = latteProcessor.preprocess(input, 'test.latte');
 			const expected = `<script n:syntax=double>
-let value = [];
+let value = [1];
 let obj = {normal: true};
 </script>`;
 			assert.strictEqual(result[0], expected);
