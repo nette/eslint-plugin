@@ -9,7 +9,7 @@ describe('Latte Configuration', () => {
 		const result = latteProcessor.preprocess(input, 'test.js.latte');
 
 		// Should use default replacements
-		assert.strictEqual(result[0], 'let value = []; alert([]); ');
+		assert.strictEqual(result[0], 'let value = [1]; alert([2]); ');
 	});
 
 	it('should use default configuration values', () => {
@@ -20,7 +20,7 @@ describe('Latte Configuration', () => {
 		const result = latteProcessor.preprocess(input, 'test.js.latte');
 
 		// Should use default replacements
-		assert.strictEqual(result[0], 'let value = []; alert([]); ');
+		assert.strictEqual(result[0], 'let value = [1]; alert([2]); ');
 	});
 
 	describe('Custom replacement function', () => {
@@ -37,7 +37,7 @@ describe('Latte Configuration', () => {
 			const input = 'let x = {custom}; let y = {$var};';
 			const result = latteProcessor.preprocess(input, 'test.latte');
 
-			assert.strictEqual(result[0], 'let x = CUSTOM_REPLACEMENT; let y = [];');
+			assert.strictEqual(result[0], 'let x = CUSTOM_REPLACEMENT; let y = [1];');
 		});
 
 		it('should handle empty string replacement', () => {

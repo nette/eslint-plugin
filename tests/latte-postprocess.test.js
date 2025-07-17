@@ -39,13 +39,13 @@ describe('Latte Postprocess', () => {
 			const messages = [[
 				{
 					line: 1,
-					column: 13,
+					column: 15,
 					endLine: 1,
-					endColumn: 13,
+					endColumn: 15,
 					message: 'Missing semicolon',
 					ruleId: 'semi',
 					fix: {
-						range: [13, 13], // Insert at end of "let user = []"
+						range: [14, 14], // Insert at end of "let user = [1]"
 						text: ';',
 					},
 				},
@@ -65,9 +65,9 @@ describe('Latte Postprocess', () => {
 			const messages = [[
 				{
 					line: 1,
-					column: 16, // Points to [] replacement
+					column: 16, // Points to [1] replacement
 					endLine: 1,
-					endColumn: 18,
+					endColumn: 19,
 					message: 'Test error',
 					ruleId: 'test-rule',
 				},
@@ -85,13 +85,13 @@ describe('Latte Postprocess', () => {
 			const input = 'alert({$user} + {$message});';
 			latteProcessor.preprocess(input, 'test.js.latte');
 
-			// Error pointing to second replacement (column 12 in processed code "alert([] + []);")
+			// Error pointing to second replacement (column 13 in processed code "alert([1] + [2]);")
 			const messages = [[
 				{
 					line: 1,
-					column: 12, // Points to second []
+					column: 13, // Points to second [2]
 					endLine: 1,
-					endColumn: 14,
+					endColumn: 16,
 					message: 'Test error',
 					ruleId: 'test-rule',
 				},
@@ -139,9 +139,9 @@ console.log(user, msg);`;
 			const messages = [[
 				{
 					line: 1,
-					column: 27, // Points to third "0" in processed: "if (0 && 0) { console.log(0); }"
+					column: 29, // Points to area before third [3] in processed: "if ([1] && [2]) { console.log([3]); }"
 					endLine: 1,
-					endColumn: 28,
+					endColumn: 30,
 					message: 'Test error',
 					ruleId: 'test-rule',
 				},
@@ -164,11 +164,11 @@ console.log(user, msg);`;
 					line: 1,
 					column: 9,
 					endLine: 1,
-					endColumn: 10,
+					endColumn: 11,
 					message: 'Test error',
 					ruleId: 'test-rule',
 					fix: {
-						range: [8, 10], // Fix the [] character in processed code
+						range: [8, 11], // Fix the [1] character in processed code
 						text: '1',
 					},
 				},
@@ -267,9 +267,9 @@ console.log(user, msg);`;
 			const messages = [[
 				{
 					line: 1,
-					column: 8, // Points to second "0" in "alert(000);"
+					column: 9, // Points to boundary between [1] and [2] in "alert([1][2][3]);"
 					endLine: 1,
-					endColumn: 9,
+					endColumn: 10,
 					message: 'Test error',
 					ruleId: 'test-rule',
 				},
