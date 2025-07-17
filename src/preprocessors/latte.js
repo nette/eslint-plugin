@@ -11,6 +11,7 @@ const LATTE_TAG = /\{(?:[a-zA-Z_$\\/=].*?)\}/gs;
 const LATTE_TAG_DOUBLE = /\{\{(?:[a-zA-Z_$\\/=].*?)\}\}/gs;
 
 // Default internal replacement function
+let counter = 1;
 function defaultReplacement(tagContent) {
 	let replacedTag = /^(?:=|_|\$|(?:control|link|plink|asset)(?!\w)|\w[\w:\\]*(\(|::))/;
 
@@ -22,7 +23,7 @@ function defaultReplacement(tagContent) {
 	}
 	if (replacedTag.test(tagContent)) {
 		// so that you can call a method over it and eslint doesn't correct it as quotes
-		return '[]';
+		return '[' + (counter++) + ']';
 	}
 
 	return ''; // remove completely
