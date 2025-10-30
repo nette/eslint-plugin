@@ -14,6 +14,7 @@ export default [
 			'@stylistic/no-multiple-empty-lines': ['error', { max: 2, maxEOF: 0 }],
 			'@stylistic/new-parens': ['error', 'never'],
 			'@stylistic/padded-blocks': 'off',
+			'@stylistic/indent-binary-ops': 'error',
 
 			'@nette/no-this-in-arrow-except': 'error',
 			'@nette/prefer-line-comments': 'error',
