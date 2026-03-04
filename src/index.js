@@ -8,6 +8,7 @@ import plugin from './plugin.js';
 import jsConfig from './configs/javascript.js';
 import baseConfig from './configs/base.js';
 import browserConfig from './configs/browser.js';
+import jsxConfig from './configs/jsx.js';
 
 /**
  * Configuration factory for creating custom ESLint configurations
@@ -25,6 +26,7 @@ function customize(options = {}) {
 		...baseConfig,
 		...((options.browser ?? true) ? browserConfig : []),
 		...jsConfig,
+		...(options.jsx ? jsxConfig : []),
 	];
 }
 

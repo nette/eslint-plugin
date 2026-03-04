@@ -93,6 +93,35 @@ export default defineConfig([
 ```
 
 
+Using JSX Configuration
+-----------------------
+
+To enable linting of `.jsx` and `.tsx` files, use the `jsx` option:
+
+```js
+import nette from '@nette/eslint-plugin';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+	{
+		extends: [nette.configs.customize({ jsx: true })],
+	},
+]);
+```
+
+For TypeScript + JSX (React/TSX):
+
+```js
+import nette from '@nette/eslint-plugin/typescript';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig([
+	{
+		extends: [nette.configs.customize({ typescript: true, jsx: true })],
+	},
+]);
+```
+
 Using TypeScript Configuration
 ------------------------------
 
@@ -118,6 +147,7 @@ export default defineConfig([
 		extends: [nette.configs.customize({
 			browser: true,    // Include browser globals (default: true)
 			typescript: true, // Include TypeScript support (default: false)
+			jsx: true,        // Include JSX/TSX support (default: false)
 		})],
 		// ...your other config items
 	},
