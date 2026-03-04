@@ -9,6 +9,7 @@ import jsConfig from './configs/javascript.js';
 import tsConfig from './configs/typescript.js';
 import baseConfig from './configs/base.js';
 import browserConfig from './configs/browser.js';
+import jsxConfig from './configs/jsx.js';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -26,6 +27,7 @@ function customize(options = {}) {
 		...tseslint.configs.recommended,
 		...jsConfig,
 		...(options.typescript ? tsConfig : []),
+		...(options.jsx ? jsxConfig : []),
 	];
 }
 
