@@ -71,7 +71,6 @@ function getOriginalPosition(processedPosition, forEndOfRange = false) {
 
 		// Move past the chars before the tag
 		currentProcessedPos += charsBeforeTag;
-		currentOriginalPos = f.start.position;
 
 		// If processed position is within this tag's replacement
 		if (processedPosition < currentProcessedPos + f.replacement.length) {
