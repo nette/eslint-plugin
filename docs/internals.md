@@ -12,10 +12,10 @@ ESLint cannot parse Latte, so `preprocessors/latte.js` runs a two-way transform:
 
 `preprocess`:
 
-- Finds every Latte tag — single-brace `{…}`, double-brace `{{…}}`, and comments
-  `{* … *}` / `{{* … *}}` — with four regexes, then **sorts all matches by position**
-  and processes them in one pass, skipping a match nested inside an already-consumed
-  region (a tag inside a comment).
+- Finds every Latte tag — single-brace `{…}` and double-brace `{{…}}`, each regex
+  matching comments `{* … *}` / `{{* … *}}` first, so a tag inside a comment is never
+  matched on its own — then **sorts all matches by position** and processes them in
+  one pass.
 - **`n:syntax="off"`/`"double"` regions** are respected: a `<script n:syntax=off>` block
   is left untouched, and inside a `double` region only `{{…}}` tags are processed while
   outside only `{…}` are — so the wrong brace style is never mis-stripped.

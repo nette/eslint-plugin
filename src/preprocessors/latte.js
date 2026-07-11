@@ -5,10 +5,10 @@ let defaultSettings = {
 let settings = defaultSettings;
 let context;
 
-// Regex for Latte tags: {foo}, {/foo}, {=expr}, {_expr}, {$var}
-const LATTE_TAG = /\{(?:[a-zA-Z_$\\/=].*?)\}/gs;
-// Regex for double-brace Latte tags: {{foo}}, {{/foo}}, {{=expr}}, etc.
-const LATTE_TAG_DOUBLE = /\{\{(?:[a-zA-Z_$\\/=].*?)\}\}/gs;
+// Regex for Latte tags: {foo}, {/foo}, {=expr}, {_expr}, {$var}, {* comment *}
+const LATTE_TAG = /\{\*.*?\*\}|\{(?:[a-zA-Z_$\\/=].*?)\}/gs;
+// Regex for double-brace Latte tags: {{foo}}, {{/foo}}, {{=expr}}, {{* comment *}}, etc.
+const LATTE_TAG_DOUBLE = /\{\{\*.*?\*\}\}|\{\{(?:[a-zA-Z_$\\/=].*?)\}\}/gs;
 
 // Default internal replacement function
 let counter = 1;
@@ -283,8 +283,10 @@ const latteProcessor = {
 			let tagContent = matchObj.type === 'double'
 				? match[0].slice(2, -2) // Remove {{ and }}
 				: match[0].slice(1, -1); // Remove { and }
-			let replacement = (settings.replacementFunction ? settings.replacementFunction(tagContent) : null)
-				?? defaultReplacement(tagContent);
+			let replacement = tagContent.startsWith('*')
+				? '' // comments are stripped entirely
+				: ((settings.replacementFunction ? settings.replacementFunction(tagContent) : null)
+					?? defaultReplacement(tagContent));
 
 			// Handle leading whitespace removal for empty replacement on standalone tags
 			let actualReplacement = replacement;
