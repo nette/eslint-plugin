@@ -211,6 +211,10 @@ function remapMessages(messages) {
 }
 
 const latteProcessor = {
+	meta: {
+		name: '@nette/latte',
+	},
+
 	preprocess: (text, filename) => {
 		context = null;
 		counter = 1;
