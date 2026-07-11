@@ -3,7 +3,7 @@ const meta = {
 	docs: {
 		description: 'Disallow `this` inside an arrow function, with fine-grained exceptions',
 		recommended: true,
-		url: null, // Add a URL to your docs if available
+		url: 'https://github.com/nette/eslint-plugin#no-this-in-arrow-except',
 	},
 	schema: [
 		{

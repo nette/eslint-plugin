@@ -3,6 +3,7 @@ const meta = {
 	docs: {
 		description: 'Prefer // over /* */ for single-line comments (but allow one-line JSDoc /** … */).',
 		recommended: true,
+		url: 'https://github.com/nette/eslint-plugin#prefer-line-comments',
 	},
 	schema: [],
 	fixable: 'code',
