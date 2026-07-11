@@ -208,3 +208,5 @@ Enforces the use of line comments (`//`) instead of block comments (`/* */`) for
 Exceptions are made for:
 - Multi-line block comments
 - JSDoc comments (block comments starting with `*`)
+- Comments followed by code on the same line
+- ESLint directives, coverage hints and tooling annotations (`/* eslint-disable */`, `/*#__PURE__*/`, `/*! license */`, …)

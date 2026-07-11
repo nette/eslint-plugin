@@ -11,6 +11,11 @@ const meta = {
 	},
 };
 
+// comments whose meaning depends on the /* */ form: ESLint directives, coverage hints,
+// tooling annotations (webpack/vite/rollup/terser magic comments, @license, #__PURE__, …)
+// and preserved-license (/*! … */) blocks. Rewriting these to // would break them.
+const ANNOTATED = /^(eslint\b|globals?\b|exported\b|istanbul\b|[cv]8\b|node:coverage\b|webpack[A-Z]|[@#!])/;
+
 function create(context) {
 	let sourceCode = context.sourceCode;
 
@@ -21,24 +26,30 @@ function create(context) {
 					continue;
 				}
 
-				let text = comment.value;
-				let isSingleLine = !text.includes('\n');
-				let isJSDoc = text.trim().startsWith('*');
+				let content = comment.value.trim();
+				let isSingleLine = !comment.value.includes('\n');
+				let isJSDoc = content.startsWith('*');
 
-				// report only true single-line non-JSDoc blocks
-				if (isSingleLine && !isJSDoc) {
-					context.report({
-						loc: comment.loc,
-						messageId: 'preferLine',
-						fix(fixer) {
-							let content = text.trim();
-							return fixer.replaceTextRange(
-								[comment.range[0], comment.range[1]],
-								`// ${content}`,
-							);
-						},
-					});
+				if (!isSingleLine || isJSDoc || ANNOTATED.test(content)) {
+					continue;
 				}
+
+				// a // comment would swallow anything that follows on the same line
+				let nextToken = sourceCode.getTokenAfter(comment, { includeComments: true });
+				if (nextToken && nextToken.loc.start.line === comment.loc.end.line) {
+					continue;
+				}
+
+				context.report({
+					loc: comment.loc,
+					messageId: 'preferLine',
+					fix(fixer) {
+						return fixer.replaceTextRange(
+							[comment.range[0], comment.range[1]],
+							`// ${content}`,
+						);
+					},
+				});
 			}
 		},
 	};
