@@ -186,7 +186,8 @@ no-this-in-arrow-except
 Prevents using `this` in arrow functions with exceptions for specific cases. It has two modes:
 
 1. **Default mode** (`allowNestedInFunction: false`):
-	 - Allows `this` in arrow functions only when they are callbacks in class methods or directly passed to function calls
+	 - Allows `this` in arrow functions only when they are callbacks in class or object methods or directly passed to function calls
+	 - Also allows it in arrow functions inside class field initializers and static blocks, where `this` is the instance or the class
 
 2. **Opt-in mode** (`allowNestedInFunction: true`):
 	 - Also allows `this` in arrow functions when nested within any regular function

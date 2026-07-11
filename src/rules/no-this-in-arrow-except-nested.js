@@ -38,17 +38,23 @@ function create(context) {
 		return null;
 	};
 
+	/** whether the node gives `this` its own binding, as an arrow does not */
+	let bindsThis = (n) => n.type === 'FunctionExpression'
+		|| n.type === 'FunctionDeclaration'
+		|| n.type === 'PropertyDefinition'
+		|| n.type === 'StaticBlock';
+
 	return {
 		'ArrowFunctionExpression ThisExpression'(node) {
 			let ancestors = sourceCode.getAncestors(node); // Program → parent-of-this
 			let len = ancestors.length;
 
-			// ignore if *any* non-arrow function sits between `this` and the nearest arrow
+			// ignore if anything binding `this` sits between `this` and the nearest arrow
 			for (let i = len - 1; i >= 0; i--) {
 				let a = ancestors[i];
 
-				if (a.type === 'FunctionExpression' || a.type === 'FunctionDeclaration') {
-					return; // `this` belongs to that regular function → valid
+				if (bindsThis(a)) {
+					return; // `this` belongs to that node → valid
 				}
 				if (a.type === 'ArrowFunctionExpression') {
 					break; // found the relevant arrow, no blocker above
@@ -61,10 +67,14 @@ function create(context) {
 				return;
 			}
 
-			// locate nearest regular function *above* the arrow
-			let wrapper = findAbove(ancestors, arrowIdx, (n) =>
-				n.type === 'FunctionExpression' || n.type === 'FunctionDeclaration',
-			);
+			// locate the nearest node above the arrow that binds `this`
+			let wrapper = findAbove(ancestors, arrowIdx, bindsThis);
+
+			// inside a class field initializer or static block, `this` binds to the
+			// instance/class, so the arrow inherits a meaningful `this`
+			if (wrapper?.node.type === 'PropertyDefinition' || wrapper?.node.type === 'StaticBlock') {
+				return;
+			}
 
 			if (allowNestedInFunction) {
 				if (wrapper) { // any wrapper regular fn is enough
@@ -77,11 +87,14 @@ function create(context) {
 				return;
 			}
 
-			// default mode: wrapper must be a callback (parent CallExpression) or a class method body (parent MethodDefinition)
+			// default mode: the wrapping regular function must itself supply a useful `this`
+			// - a callback (parent CallExpression),
+			// - a class method (parent MethodDefinition),
+			// - an object/class member function (parent Property / PropertyDefinition)
 			if (wrapper) {
 				let parentOfWrapper = ancestors[wrapper.idx - 1] ?? null;
-				let ok = parentOfWrapper && (parentOfWrapper.type === 'CallExpression' || parentOfWrapper.type === 'MethodDefinition');
-				if (ok) {
+				let allowedParents = ['CallExpression', 'MethodDefinition', 'Property', 'PropertyDefinition'];
+				if (parentOfWrapper && allowedParents.includes(parentOfWrapper.type)) {
 					return; // allowed
 				}
 			}

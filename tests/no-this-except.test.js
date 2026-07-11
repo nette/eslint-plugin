@@ -38,8 +38,65 @@ ruleTester.run('no-this-in-arrow-except (default)', rule, {
                 });
             `,
 		},
+		// class field initializer arrow (bound method) → `this` is the instance → OK
+		{
+			code: `
+                class Foo {
+                    handler = () => {
+                        this.value;
+                    };
+                }
+            `,
+		},
+		// nested arrow inside a class field initializer → still the instance → OK
+		{
+			code: `
+                class Foo {
+                    handler = () => [].map(() => this.value);
+                }
+            `,
+		},
+		// arrow callback inside an object shorthand method → OK
+		{
+			code: `
+                const obj = {
+                    foo() {
+                        [].map(() => this.value);
+                    },
+                };
+            `,
+		},
+		// arrow inside a class static block → `this` is the class → OK
+		{
+			code: `
+                class Foo {
+                    static {
+                        [].map(() => this.value);
+                    }
+                }
+            `,
+		},
+		// class field of a class declared inside an arrow → `this` is the instance → OK
+		{
+			code: `
+                const make = () => class {
+                    value = this.other;
+                };
+            `,
+		},
 	],
 	invalid: [
+		// arrow as an object literal property value → `this` is NOT the object → error
+		{
+			code: `
+                const obj = {
+                    foo: () => {
+                        this.value;
+                    },
+                };
+            `,
+			errors: [{ messageId: 'noThisInArrowWithException' }],
+		},
 		// top-level arrow → error
 		{
 			code: `
@@ -83,6 +140,17 @@ ruleTester.run(
 				code: `
                     function outer() {
                         const a = () => {
+                            this.value;
+                        };
+                    }
+                `,
+				options: [{ allowNestedInFunction: true }],
+			},
+			// class field initializer arrow → the instance → allowed
+			{
+				code: `
+                    class Foo {
+                        handler = () => {
                             this.value;
                         };
                     }
