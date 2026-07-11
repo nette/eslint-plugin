@@ -12,10 +12,10 @@ Installation
 npm install --save-dev @nette/eslint-plugin eslint
 ```
 
-For TypeScript support, you will also need these additional dependencies:
+For TypeScript support, you will also need the TypeScript compiler (`typescript-eslint` is already a dependency of this package):
 
 ```bash
-npm install --save-dev typescript typescript-eslint
+npm install --save-dev typescript
 ```
 
 For Latte template support (HTML files with embedded JavaScript), you will also need:
@@ -85,12 +85,29 @@ export default defineConfig([
 		files: ['app/**/*.latte'],
 
 		plugins: {
+			'@nette': nette,        // Provides the Latte processor
 			html: pluginHtml,       // Enables eslint-plugin-html
 		},
-		processor: '@nette/latte',  // Enabled Latte preprocessor
+		processor: '@nette/latte',  // Enables the Latte preprocessor
 	},
 ]);
 ```
+
+### Configuring the Latte processor
+
+The processor can be tuned via `nette.processors.latte.configure()`:
+
+```js
+nette.processors.latte.configure({
+	// Custom replacement for a Latte tag; return null to use the default behavior
+	replacementFunction: (tagContent) => tagContent === 'now' ? 'Date.now()' : null,
+
+	// Drop ESLint messages (and fixes) that map back into replaced Latte code
+	removeLatteErrors: false,
+});
+```
+
+By default `{$var}`, `{=expr}` and similar tags are replaced with a `[n]` placeholder, `{_text}` translations too, control structures (`{if}`, `{foreach}`, …) and `{* comments *}` are removed, and `{l}`/`{r}` become `{`/`}`.
 
 
 Using JSX Configuration
@@ -141,15 +158,34 @@ export default defineConfig([
 Customizing Configuration
 ------------------------
 
+The base entry point (`@nette/eslint-plugin`) supports `browser` and `jsx`:
+
 ```js
+import nette from '@nette/eslint-plugin';
+
 export default defineConfig([
 	{
 		extends: [nette.configs.customize({
 			browser: true,    // Include browser globals (default: true)
-			typescript: true, // Include TypeScript support (default: false)
 			jsx: true,        // Include JSX/TSX support (default: false)
 		})],
 		// ...your other config items
+	},
+]);
+```
+
+TypeScript support is only available from the `@nette/eslint-plugin/typescript` entry point, which additionally accepts `typescript: true`:
+
+```js
+import nette from '@nette/eslint-plugin/typescript';
+
+export default defineConfig([
+	{
+		extends: [nette.configs.customize({
+			browser: true,
+			typescript: true,
+			jsx: true,
+		})],
 	},
 ]);
 ```
