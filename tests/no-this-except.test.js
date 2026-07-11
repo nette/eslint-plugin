@@ -1,5 +1,5 @@
 import { RuleTester } from 'eslint';
-import rule from '../src/rules/no-this-in-arrow-except-nested.js';
+import rule from '../src/rules/no-this-in-arrow-except.js';
 
 const ruleTester = new RuleTester;
 

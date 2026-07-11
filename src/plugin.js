@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import noThisInArrow from './rules/no-this-in-arrow-except-nested.js';
+import noThisInArrow from './rules/no-this-in-arrow-except.js';
 import preferLineComments from './rules/prefer-line-comments.js';
 import latteProcessor from './preprocessors/latte.js';
 

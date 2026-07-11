@@ -57,8 +57,6 @@ npm run lint                                    # and lint:fix
   resolves out of the box; only the `typescript` compiler is left to the consumer.
   Import it via `import nette from '@nette/eslint-plugin/typescript'`
   (`customize({typescript: true})` is no longer supported).
-- **Rule name vs file mismatch:** the rule is `no-this-in-arrow-except` but its file is
-  `no-this-in-arrow-except-nested.js`.
 - **Releasing:** npm publishes `package.json`'s `version` and ignores git tags, so
   always bump with `npm version <x>` (updates package.json + commits + tags together),
   never a bare `git tag`.
