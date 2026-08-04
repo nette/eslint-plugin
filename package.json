@@ -33,6 +33,9 @@
 	"peerDependencies": {
 		"eslint": "^9.26.0 || ^10.0.0"
 	},
+	"engines": {
+		"node": ">=22.13.0"
+	},
 	"devDependencies": {
 		"eslint": "^10.0.0",
 		"mocha": "^11.2.2",
