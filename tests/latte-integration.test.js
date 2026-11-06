@@ -87,4 +87,27 @@ function foo() {
 		assert.strictEqual(await fix('let x = ({$y});\n'), 'let x = ({$y});\n');
 		assert.strictEqual(await fix('foo();\n{if $x}\n{/if}\nbar();\n'), 'foo();\n{if $x}\n{/if}\nbar();\n');
 	});
+
+	it('should map suggestions back to the template', async () => {
+		const linter = new ESLint({
+			overrideConfigFile: true,
+			overrideConfig: [
+				{
+					plugins: {
+						nette: nettePlugin,
+					},
+					files: ['**/*.latte'],
+					processor: 'nette/latte',
+					rules: {
+						'no-useless-escape': 'error',
+					},
+				},
+			],
+		});
+		const code = 'let x = {$user}; let s = "\\.";';
+		const [result] = await linter.lintText(code, { filePath: 'test.js.latte' });
+		const { range, text } = result.messages[0].suggestions.find((suggestion) => suggestion.messageId === 'removeEscape').fix;
+
+		assert.strictEqual(code.slice(0, range[0]) + text + code.slice(range[1]), 'let x = {$user}; let s = ".";');
+	});
 });

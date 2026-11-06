@@ -178,7 +178,7 @@ console.log(user, msg);`;
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].line, 1);
 			assert.strictEqual(result[0].column, 9); // Should map to start of {$user}
-			assert.strictEqual(result[0].fix, undefined); // would replace {$user} with 1
+			assert.strictEqual('fix' in result[0], false); // would replace {$user} with 1
 		});
 
 		it('should keep a fix inserting right before a placeholder', () => {
@@ -234,6 +234,38 @@ console.log(user, msg);`;
 			const result = latteProcessor.postprocess(messages, 'test.js.latte');
 
 			assert.strictEqual(result[0].fix, undefined);
+		});
+
+		it('should map suggestion fixes and drop those reaching into a Latte tag', () => {
+			const input = 'let x = {$user}; foo();';
+			latteProcessor.preprocess(input, 'test.js.latte');
+
+			const messages = [[
+				{
+					line: 1,
+					column: 14,
+					message: 'Test error',
+					ruleId: 'test-rule',
+					suggestions: [
+						{ desc: 'after the tag', fix: { range: [13, 16], text: 'bar' } }, // "foo" in "let x = [1]; foo();"
+						{ desc: 'over the tag', fix: { range: [8, 11], text: '0' } }, // "[1]"
+					],
+				},
+				{
+					line: 1,
+					column: 9,
+					message: 'Test error',
+					ruleId: 'test-rule',
+					suggestions: [
+						{ desc: 'over the tag', fix: { range: [8, 11], text: '0' } },
+					],
+				},
+			]];
+			const result = latteProcessor.postprocess(messages, 'test.js.latte');
+
+			assert.strictEqual(result[0].suggestions.length, 1);
+			assert.deepStrictEqual(result[0].suggestions[0].fix, { range: [17, 20], text: 'bar' });
+			assert.strictEqual('suggestions' in result[1], false);
 		});
 
 		it('should handle errors before first Latte tag', () => {

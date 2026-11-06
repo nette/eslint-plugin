@@ -124,6 +124,16 @@ function touchesLatteCode([start, end]) {
 	return false;
 }
 
+function remapFix(fix) {
+	if (touchesLatteCode(fix.range)) {
+		return undefined;
+	}
+	return {
+		...fix,
+		range: [getOriginalPosition(fix.range[0]), getOriginalPosition(fix.range[1])],
+	};
+}
+
 function findSyntaxOffRegions(text) {
 	let regions = [];
 	let match;
@@ -180,24 +190,18 @@ function remapMessages(messages) {
 		}
 
 		// Create a copy of the message to avoid modifying the original
-		let message = { ...originalMessage };
+		let { fix, suggestions, ...message } = originalMessage;
 
 		let loc = getOriginalLocation(message);
 		message.line = loc.line;
 		message.column = loc.column;
 
-		// Map fix range; a fix reaching into a Latte tag is dropped
-		if (message.fix && message.fix.range) {
-			if (touchesLatteCode(message.fix.range)) {
-				delete message.fix;
-			} else {
-				message.fix = { ...message.fix }; // Copy fix object
-				message.fix.range = [
-					getOriginalPosition(message.fix.range[0]),
-					getOriginalPosition(message.fix.range[1]),
-				];
-			}
-		}
+		// Map fix ranges; a fix reaching into a Latte tag is dropped
+		fix = fix && remapFix(fix);
+		suggestions = suggestions
+			?.map((suggestion) => ({ ...suggestion, fix: remapFix(suggestion.fix) }))
+			.filter((suggestion) => suggestion.fix);
+		Object.assign(message, fix && { fix }, suggestions?.length > 0 && { suggestions });
 
 		// Map end location
 		if (message.endLine && message.endColumn) {
