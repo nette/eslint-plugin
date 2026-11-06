@@ -1,6 +1,7 @@
 import { describe, it, beforeEach } from 'mocha';
 import assert from 'assert';
 import { ESLint } from 'eslint';
+import stylistic from '@stylistic/eslint-plugin';
 import nettePlugin from '../src/index.js';
 
 describe('Latte Integration', () => {
@@ -58,5 +59,32 @@ function foo() {
 		// Should detect undefined variable error
 		assert.strictEqual(results[0].errorCount, 1);
 		assert.strictEqual(results[0].messages[0].ruleId, 'no-undef');
+	});
+
+	it('should autofix around Latte tags without rewriting them', async () => {
+		const fixer = new ESLint({
+			overrideConfigFile: true,
+			fix: true,
+			overrideConfig: [
+				{
+					plugins: {
+						'nette': nettePlugin,
+						'@stylistic': stylistic,
+					},
+					files: ['**/*.latte'],
+					processor: 'nette/latte',
+					rules: {
+						'@stylistic/space-infix-ops': 'error',
+						'@stylistic/no-extra-parens': 'error',
+						'@stylistic/no-multiple-empty-lines': ['error', { max: 1 }],
+					},
+				},
+			],
+		});
+		const fix = async (code) => (await fixer.lintText(code, { filePath: 'test.js.latte' }))[0].output ?? code;
+
+		assert.strictEqual(await fix('let x={$user};\n'), 'let x = {$user};\n');
+		assert.strictEqual(await fix('let x = ({$y});\n'), 'let x = ({$y});\n');
+		assert.strictEqual(await fix('foo();\n{if $x}\n{/if}\nbar();\n'), 'foo();\n{if $x}\n{/if}\nbar();\n');
 	});
 });

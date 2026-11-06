@@ -51,8 +51,9 @@ npm run lint                                    # and lint:fix
     right after the `preprocess` of the same file, files never interleave.
   - **`postprocess` remaps each message's position AND its `fix.range`/end** back to
     the original. `supportsAutofix` is true, so **that position math must be exact or
-    autofix corrupts the template** - the load-bearing part. `removeLatteErrors` drops
-    messages that fall inside a Latte tag.
+    autofix corrupts the template** - the load-bearing part. A fix reaching into a
+    Latte tag is dropped, as its text was computed from the placeholder.
+    `removeLatteErrors` drops messages that fall inside a Latte tag.
 - **`typescript-eslint` is a direct dependency**, so the `/typescript` entry point
   resolves out of the box; only the `typescript` compiler is left to the consumer.
   Import it via `import nette from '@nette/eslint-plugin/typescript'`

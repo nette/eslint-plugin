@@ -107,6 +107,23 @@ function isInLatteCode(position) {
 	return false;
 }
 
+function touchesLatteCode([start, end]) {
+	let shift = 0; // processed position minus original position
+	for (let f of context.filtered) {
+		let tagStart = f.start.position + shift;
+		let tagEnd = tagStart + f.replacement.length;
+		// a removed tag counts even at the edge, the fix could belong to either side
+		let touches = tagStart === tagEnd
+			? start <= tagStart && end >= tagStart
+			: start < tagEnd && end > tagStart;
+		if (touches) {
+			return true;
+		}
+		shift = tagEnd - f.end.position;
+	}
+	return false;
+}
+
 function findSyntaxOffRegions(text) {
 	let regions = [];
 	let match;
@@ -146,64 +163,53 @@ function getSyntaxModeForPosition(position, syntaxOffRegions) {
 
 function remapMessages(messages) {
 	let ms = [];
-	let startPosition = context.filtered.length > 0 ? context.filtered[0].start.position : 0;
-	let start = false;
 
-	for (let i = 0; i < messages[0].length; i++) {
-		let originalMessage = messages[0][i];
-
-		if (!start) {
+	for (let originalMessage of messages[0]) {
+		if (settings.removeLatteErrors) {
 			let position = getPosition(originalMessage, context.code.lineStartIndices);
-			if (position >= startPosition) {
-				start = true;
+			let pos = getOriginalPosition(position);
+			if (isInLatteCode(pos)) {
+				continue;
 			}
-		}
-
-		if (start) {
-			if (settings.removeLatteErrors) {
-				let position = getPosition(originalMessage, context.code.lineStartIndices);
-				let pos = getOriginalPosition(position);
+			if (originalMessage.fix && originalMessage.fix.range) {
+				pos = getOriginalPosition(originalMessage.fix.range[0]);
 				if (isInLatteCode(pos)) {
 					continue;
 				}
-				if (originalMessage.fix && originalMessage.fix.range) {
-					pos = getOriginalPosition(originalMessage.fix.range[0]);
-					if (isInLatteCode(pos)) {
-						continue;
-					}
-				}
 			}
+		}
 
-			// Create a copy of the message to avoid modifying the original
-			let message = { ...originalMessage };
+		// Create a copy of the message to avoid modifying the original
+		let message = { ...originalMessage };
 
-			let loc = getOriginalLocation(message);
-			message.line = loc.line;
-			message.column = loc.column;
+		let loc = getOriginalLocation(message);
+		message.line = loc.line;
+		message.column = loc.column;
 
-			// Map fix range
-			if (message.fix && message.fix.range) {
+		// Map fix range; a fix reaching into a Latte tag is dropped
+		if (message.fix && message.fix.range) {
+			if (touchesLatteCode(message.fix.range)) {
+				delete message.fix;
+			} else {
 				message.fix = { ...message.fix }; // Copy fix object
 				message.fix.range = [
 					getOriginalPosition(message.fix.range[0]),
 					getOriginalPosition(message.fix.range[1]),
 				];
 			}
-
-			// Map end location
-			if (message.endLine && message.endColumn) {
-				loc = getOriginalLocation({
-					line: message.endLine,
-					column: message.endColumn,
-				});
-				message.endLine = loc.line;
-				message.endColumn = loc.column;
-			}
-
-			ms.push(message);
-		} else {
-			ms.push(originalMessage);
 		}
+
+		// Map end location
+		if (message.endLine && message.endColumn) {
+			loc = getOriginalLocation({
+				line: message.endLine,
+				column: message.endColumn,
+			});
+			message.endLine = loc.line;
+			message.endColumn = loc.column;
+		}
+
+		ms.push(message);
 	}
 
 	// Always update with mapped messages

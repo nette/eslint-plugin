@@ -34,11 +34,15 @@ ESLint cannot parse Latte, so `preprocessors/latte.js` runs a two-way transform:
 `filtered` list, accumulating original-vs-processed offsets, to translate each message
 line/column — **and its `fix.range` and end position** — back to the original file.
 A position at the start of or inside a placeholder maps to the *start* of its tag, a
-fix-range end included: mapping that end to the end of the tag would make an insertion
-right before a tag (`x={$y}` → `x = {$y}`) swallow it. `removeLatteErrors` optionally
-drops any message whose position (or fix range) falls **inside** a Latte tag, since those
-aren't real JS issues. `supportsAutofix` is true, so the remapped fix ranges must be
-exact or autofix corrupts the template — that position math is the load-bearing part.
+fix-range end included, so an insertion right before a tag (`x={$y}` → `x = {$y}`)
+stays before it. **A fix reaching into a tag is dropped** (`touchesLatteCode`) while
+its message stays: the fix text was computed from the replacement, so applying it would
+rewrite Latte code (`({$y})` → `[1]`). That holds for a fix overlapping a placeholder
+and for one merely touching the position of a removed tag, where it is ambiguous on
+which side of the tag the fix belongs. `removeLatteErrors` optionally drops any message
+whose position (or fix range) falls **inside** a Latte tag, since those aren't real JS
+issues. `supportsAutofix` is true, so the remapped fix ranges must be exact or autofix
+corrupts the template — that position math is the load-bearing part.
 
 ## The rest
 

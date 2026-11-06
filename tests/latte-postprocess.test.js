@@ -155,7 +155,7 @@ console.log(user, msg);`;
 			assert.strictEqual(result[0].endColumn, 44); // Should map to end of {$result}
 		});
 
-		it('should handle autofix range mapping', () => {
+		it('should drop a fix rewriting a placeholder, but keep the message', () => {
 			const input = 'let x = {$user};';
 			latteProcessor.preprocess(input, 'test.js.latte');
 
@@ -178,8 +178,62 @@ console.log(user, msg);`;
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].line, 1);
 			assert.strictEqual(result[0].column, 9); // Should map to start of {$user}
-			assert.strictEqual(result[0].fix.range[0], 8); // Should map to original position
-			assert.strictEqual(result[0].fix.range[1], 15); // Should map to end of original {$user}
+			assert.strictEqual(result[0].fix, undefined); // would replace {$user} with 1
+		});
+
+		it('should keep a fix inserting right before a placeholder', () => {
+			const input = 'let x={$user};';
+			latteProcessor.preprocess(input, 'test.js.latte');
+
+			const messages = [[
+				{
+					line: 1,
+					column: 6,
+					message: 'Operator = must be spaced',
+					ruleId: 'space-infix-ops',
+					fix: { range: [6, 6], text: ' ' }, // in "let x=[1];" right before [1]
+				},
+			]];
+			const result = latteProcessor.postprocess(messages, 'test.js.latte');
+
+			assert.deepStrictEqual(result[0].fix.range, [6, 6]);
+		});
+
+		it('should drop a fix that starts before the first tag and spans it', () => {
+			const input = 'let x = ({$y});';
+			latteProcessor.preprocess(input, 'test.js.latte');
+
+			const messages = [[
+				{
+					line: 1,
+					column: 9,
+					message: 'Unnecessary parentheses',
+					ruleId: 'no-extra-parens',
+					fix: { range: [8, 13], text: '[1]' }, // "([1])" in "let x = ([1]);"
+				},
+			]];
+			const result = latteProcessor.postprocess(messages, 'test.js.latte');
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].fix, undefined);
+		});
+
+		it('should drop a fix reaching the position of a removed tag', () => {
+			const input = 'let y = 1;  {if $a}\n';
+			latteProcessor.preprocess(input, 'test.js.latte');
+
+			const messages = [[
+				{
+					line: 1,
+					column: 11,
+					message: 'Trailing spaces not allowed',
+					ruleId: 'no-trailing-spaces',
+					fix: { range: [10, 12], text: '' }, // the spaces in "let y = 1;  \n"
+				},
+			]];
+			const result = latteProcessor.postprocess(messages, 'test.js.latte');
+
+			assert.strictEqual(result[0].fix, undefined);
 		});
 
 		it('should handle errors before first Latte tag', () => {
