@@ -47,8 +47,8 @@ npm run lint                                    # and lint:fix
     into something wrong; `{l}`/`{r}` → `{`/`}`; comments/other tags → `''`. A
     stripped standalone tag also loses its leading whitespace.
   - **`n:syntax="off"`/`"double"` regions are respected** (a `double` region processes
-    only `{{…}}`), and **per-file contexts are kept in a `Map` keyed by filename** -
-    ESLint interleaves files, so one shared context would be clobbered.
+    only `{{…}}`). One module-level context is enough: ESLint calls `postprocess`
+    right after the `preprocess` of the same file, files never interleave.
   - **`postprocess` remaps each message's position AND its `fix.range`/end** back to
     the original. `supportsAutofix` is true, so **that position math must be exact or
     autofix corrupts the template** - the load-bearing part. `removeLatteErrors` drops
@@ -60,5 +60,5 @@ npm run lint                                    # and lint:fix
 - **Releasing:** npm publishes `package.json`'s `version` and ignores git tags, so
   always bump with `npm version <x>` (updates package.json + commits + tags together),
   never a bare `git tag`.
-- User-facing how-to (the rule options, `configs.latte`/`configureLatte()` options,
+- User-facing how-to (the rule options, the Latte processor's `configure()` options,
   JSX/TypeScript setup) is manual material and lives in the README.

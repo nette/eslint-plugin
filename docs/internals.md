@@ -25,14 +25,17 @@ ESLint cannot parse Latte, so `preprocessors/latte.js` runs a two-way transform:
   usage still parses and ESLint won't quote it), `{l}`/`{r}` become `{`/`}`, comments
   and other tags become `''`. A stripped standalone tag on an otherwise-blank line also
   has its **leading whitespace removed** so no empty indented line remains.
-- It records a `filtered` list of `{start, end, replacement}` and keeps **per-file
-  contexts in a `Map` keyed by filename** — because ESLint may interleave files, a
-  single shared `context` would be clobbered.
+- It records a `filtered` list of `{start, end, replacement}` in a single module-level
+  `context`. That is enough: ESLint lints the preprocessed blocks synchronously and
+  calls `postprocess` right after the `preprocess` of the same file, so files never
+  interleave.
 
 `postprocess` (`remapMessages`) is the inverse: `getOriginalPosition` walks the sorted
 `filtered` list, accumulating original-vs-processed offsets, to translate each message
-line/column — **and its `fix.range` and end position** — back to the original file
-(a fix-range end maps to the *end* of the original tag). `removeLatteErrors` optionally
+line/column — **and its `fix.range` and end position** — back to the original file.
+A position at the start of or inside a placeholder maps to the *start* of its tag, a
+fix-range end included: mapping that end to the end of the tag would make an insertion
+right before a tag (`x={$y}` → `x = {$y}`) swallow it. `removeLatteErrors` optionally
 drops any message whose position (or fix range) falls **inside** a Latte tag, since those
 aren't real JS issues. `supportsAutofix` is true, so the remapped fix ranges must be
 exact or autofix corrupts the template — that position math is the load-bearing part.
